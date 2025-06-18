@@ -6,9 +6,18 @@ import JoinGame from './components/JoinGame';
 import Game from './components/Game';
 import Rules from './components/Rules';
 import NotFound from './components/NotFound';
+import { Howl } from 'howler';
 
 function App() {
+  useEffect(() => {
+    const sound = new Howl({
+       src: ['/music.mp3'],
+      loop: true,
+      autoplay: true,
+    });
 
+    return () => sound.unload(); 
+  }, []);
   return (
     <Router>
       <div className="App">
