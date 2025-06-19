@@ -1,70 +1,68 @@
-# Getting Started with Create React App
+# Онлайн-игра "Бункер" 🚀  
+В создании учавстовали -- Алёна Анучина, Ксения Белослудцева и Харитонова Вероника
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Ссылка на сайт:
 
-## Available Scripts
+BNH, all rights reserved:)
+## 🎮 О проекте
 
-In the project directory, you can run:
+**"Бункер"** — многопользовательская онлайн-игра, где участники взаимодействуют в реальном времени в постапокалиптическом сценарии. Игра включает:
 
-### `npm start`
+- 🔁 Динамический процесс с синхронизацией между игроками  
+- 🧙‍♂️ Ролевую механику с уникальными характеристиками  
+- 🎨 Интуитивный UI с анимациями и эффектами  
+- ☁️ Бесплатную инфраструктуру на базе Firebase  
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## ✨ Особенности
 
-### `npm test`
+- ⏱ **Реальное время**: Синхронизация действий всех игроков  
+- 🧨 **Таймер с анимацией**: Визуальная тряска при окончании времени  
+- 🏠 **Система комнат**: Создание и подключение по коду  
+- 🧬 **Механика характеристик**: Уникальные параметры каждого игрока  
+- 📱 **Адаптивный дизайн**: Поддержка любых устройств  
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🛠 Технологический стек
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Frontend:
+- React 18  
+- React Router 6  
+- Context API  
+- CSS3 + Flexbox  
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Backend & Infrastructure:
+- Firebase Firestore  
+- Firebase Hosting  
+- Firebase Authentication  
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Инструменты:
+- Vite  
+- Firebase CLI  
+- GitHub Actions  
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🚀 Быстрый старт
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Предварительные требования:
+- Node.js v16+  
+- Аккаунт Firebase  
+- Git  
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Установка
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+# 1. Клонировать репозиторий
+git clone https://github.com/your-username/bunker-game.git
 
-## Learn More
+# 2. Перейти в директорию проекта
+cd bunker-game
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# 3. Установить зависимости
+npm install
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# 4. Запустить локальный сервер
+npm run dev
