@@ -36,15 +36,6 @@ BNH, all rights reserved:)
 ### Backend & Infrastructure:
 - Firebase Firestore  
 - Firebase Hosting  
-- Firebase Authentication  
-
-### Инструменты:
-- Vite  
-- Firebase CLI  
-- GitHub Actions  
-
----
-
 ## 🚀 Быстрый старт
 
 ### Предварительные требования:
