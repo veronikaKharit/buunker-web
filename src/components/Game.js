@@ -36,19 +36,6 @@ export const generatePlayerTraits = () => ({
   additionalInfo: getRandomElement(ADDITIONAL_INFO),
 });
 
-/*// Данные об апокалипсисе
-const DISASTER = {
-  title: "Ядерная зима",
-  description: "Глобальный ядерный конфликт привел к ядерной зиме. Поверхность Земли покрыта радиоактивными осадками, температура упала до -50°C. Солнечный свет почти не проникает через плотные облака пепла."
-};
-
-// Данные о бункере
-const BUNKER = {
-  size: "150 кв. метров",
-  duration: "5 лет",
-  foodSupply: "Консервированные продукты на 3 года",
-  features: "Система очистки воздуха, гидропонная ферма, генератор на геотермальной энергии"
-};*/
 
 export const getRandomDisaster = () => {
   return data.disasters[Math.floor(Math.random() * data.disasters.length)];
@@ -225,14 +212,32 @@ function Game() {
     }
   });
 
-  // Для таймера создаем отдельную коллекцию
+  // Подписка на изменения таймера
   const timerRef = doc(db, "timers", code);
   const unsubscribeTimer = onSnapshot(timerRef, (doc) => {
-    const timerData = doc.data();
-    if (timerData) {
-      // ... та же логика для таймера ...
+  const timerData = doc.data();
+  if (timerData) {
+    if (timerData.running) {
+      // Если таймер запущен
+      const now = Date.now();
+      const remainingSeconds = timerData.endTime 
+        ? Math.max(0, Math.floor((timerData.endTime - now) / 1000))
+        : timerData.remainingSeconds || 0;
+      
+      setTimeLeft(remainingSeconds);
+      
+      if (!timerRunning) {
+        setTimerRunning(true);
+        startTimerInterval();
+      }
+    } else {
+      // Если таймер остановлен
+      clearInterval(timerRef.current);
+      setTimerRunning(false);
+      setTimeLeft(timerData.remainingSeconds || 0); // Синхронизируем время
     }
-  });
+  }
+});
 
   return () => {
     unsubscribeRoom();
@@ -343,11 +348,12 @@ const removePlayer = async (playerToRemove) => {
   const endTime = Date.now() + totalSeconds * 1000;
   
   try {
-    const timerRef = doc(db, "timers", gameCode);
-    await setDoc(timerRef, {
+    const timerDocRef = doc(db, "timers", gameCode);
+    await setDoc(timerDocRef, {
       endTime,
+      remainingSeconds: totalSeconds, // Сохраняем начальное значение
       running: true
-    });
+    }, { merge: true }); // Используем merge для частичного обновления
     
     startTimerInterval();
     
@@ -358,11 +364,18 @@ const removePlayer = async (playerToRemove) => {
 
 const stopTimer = async () => {
   try {
-    const timerRef = doc(db, "timers", gameCode);
-    await updateDoc(timerRef, { running: false });
-    
+    // Останавливаем интервал локально
     clearInterval(timerRef.current);
     setTimerRunning(false);
+    setTimeLeft(0);
+    
+    // Обновляем состояние в Firestore
+    const timerDocRef = doc(db, "timers", gameCode);
+    await updateDoc(timerDocRef, {
+      running: false,
+      endTime: null,  // Добавляем сброс времени окончания
+      remainingSeconds: 0  // Явно указываем, что время закончилось
+    });
     
   } catch (error) {
     console.error("Ошибка остановки таймера:", error);
