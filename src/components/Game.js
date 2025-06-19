@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import data from '../data.json';
 import dataPlayer from '../dataPlayer.json';
-import { 
+import { Trash2 } from 'lucide-react';import { 
   db, 
   doc, 
   onSnapshot, 
@@ -167,7 +167,7 @@ function Game() {
 
   // Обработчик событий хранилища
   // Функция для запуска интервала таймера
-  const startTimer = () => {
+  const startTimerInterval = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     
     soundPlayedRef.current = false;
@@ -192,32 +192,6 @@ function Game() {
       });
     }, 1000);
   };
-    const stopTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    
-    soundPlayedRef.current = false;
-    
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setTimerRunning(false);
-          setTimerEnded(true);
-          playTimerSound();
-          setTimeout(() => setTimerEnded(false), 3000);
-          
-          // Обновляем состояние таймера в localStorage
-          const timerData = JSON.parse(localStorage.getItem(`timer-${gameCode}`)) || {};
-          timerData.running = false;
-          localStorage.setItem(`timer-${gameCode}`, JSON.stringify(timerData));
-          
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
 
   useEffect(() => {
   const params = new URLSearchParams(location.search);
@@ -256,7 +230,8 @@ function Game() {
   const unsubscribeTimer = onSnapshot(timerRef, (doc) => {
     const timerData = doc.data();
     if (timerData) {
-          }
+      // ... та же логика для таймера ...
+    }
   });
 
   return () => {
@@ -284,7 +259,115 @@ function Game() {
   }
 };
 
+  // Удаление игрока
+const removePlayer = async (playerToRemove) => {
+  if (!window.confirm(`Вы точно хотите удалить ${playerToRemove} из игры?`)) {
+    return;
+  }
 
+  try {
+    const roomDocRef = doc(db, "rooms", gameCode);
+    const roomDoc = await getDoc(roomDocRef);
+
+    if (!roomDoc.exists()) {
+      alert("Комната не найдена!");
+      return;
+    }
+
+    const roomData = roomDoc.data();
+    const currentRemovedPlayers = roomData.removedPlayers || [];
+    const currentRevealedTraits = roomData.revealedTraits || {};
+
+    // Если игрок уже удален - ничего не делаем
+    if (currentRemovedPlayers.includes(playerToRemove)) {
+      return;
+    }
+
+    // Проверяем наличие характеристик игрока
+    if (!roomData.playerTraits || !roomData.playerTraits[playerToRemove]) {
+      throw new Error(`Характеристики игрока ${playerToRemove} не найдены`);
+    }
+
+    // Создаем обновленные данные
+    const updatedRemovedPlayers = [...currentRemovedPlayers, playerToRemove];
+    const updatedRevealedTraits = {
+      ...currentRevealedTraits,
+      [playerToRemove]: { ...roomData.playerTraits[playerToRemove] }
+    };
+
+    // Обновляем документ в Firestore
+    await updateDoc(roomDocRef, {
+      removedPlayers: updatedRemovedPlayers,
+      revealedTraits: updatedRevealedTraits
+    });
+
+    // Обновляем локальное состояние
+    setRemovedPlayers(updatedRemovedPlayers);
+    setRevealedTraits(updatedRevealedTraits);
+
+    // Проверяем, завершена ли игра
+    const isGameOver = checkGameOver(updatedRemovedPlayers, roomData.players);
+    
+    if (isGameOver) {
+      // Определяем, является ли текущий игрок победителем
+      const isWinner = !updatedRemovedPlayers.includes(playerName);
+      setPlayerWon(isWinner);
+      setShowResult(true);
+      
+      // Для проигравших скрываем сообщение через 10 секунд
+      if (!isWinner) {
+        setTimeout(() => setShowResult(false), 10000);
+      }
+    } else {
+      // Если игра продолжается, показываем проигрыш только удаленному игроку
+      if (playerToRemove === playerName) {
+        setPlayerWon(false);
+        setShowResult(true);
+        setTimeout(() => setShowResult(false), 10000);
+      }
+    }
+
+  } catch (error) {
+    console.error("Ошибка при удалении игрока:", error);
+    alert(`Ошибка: ${error.message}`);
+  }
+};
+
+  // Управление таймером
+  const startTimer = async () => {
+  const totalSeconds = timerMinutes * 60 + timerSeconds;
+  setTimeLeft(totalSeconds);
+  setTimerRunning(true);
+  setTimerEnded(false);
+  
+  const endTime = Date.now() + totalSeconds * 1000;
+  
+  try {
+    const timerRef = doc(db, "timers", gameCode);
+    await setDoc(timerRef, {
+      endTime,
+      running: true
+    });
+    
+    startTimerInterval();
+    
+  } catch (error) {
+    console.error("Ошибка запуска таймера:", error);
+  }
+};
+
+const stopTimer = async () => {
+  try {
+    const timerRef = doc(db, "timers", gameCode);
+    await updateDoc(timerRef, { running: false });
+    
+    clearInterval(timerRef.current);
+    setTimerRunning(false);
+    
+  } catch (error) {
+    console.error("Ошибка остановки таймера:", error);
+  }
+};
 
   // Форматирование времени
   const formatTime = (seconds) => {
@@ -490,7 +573,7 @@ function Game() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: playerWon
+            background: !removedPlayers.includes(playerName) 
               ? 'rgba(0, 255, 255, 0.3)' 
               : 'rgba(255, 0, 0, 0.3)',
             zIndex: 999, // Убедимся, что поверх всего
@@ -507,21 +590,21 @@ function Game() {
             borderRadius: '20px',
             textAlign: 'center',
             maxWidth: '80%',
-             border: `4px solid ${playerWon ? '#00ffff' : '#ff0000'}`,
-            boxShadow: `0 0 30px ${playerWon ? '#00ffff' : '#ff0000'}`
+             border: `4px solid ${!removedPlayers.includes(playerName) ? '#00ffff' : '#ff0000'}`,
+            boxShadow: `0 0 30px ${!removedPlayers.includes(playerName) ? '#00ffff' : '#ff0000'}`
           }}>
             <h1 style={{
               fontSize: '48px',
-              color: playerWon ? '#00ffff' : '#ff0000',
+              color: !removedPlayers.includes(playerName) ? '#00ffff' : '#ff0000',
               marginBottom: '20px'
             }}>
-              {playerWon ? 'Вы выиграли!' : 'Вас выгнали!'}
+              {!removedPlayers.includes(playerName) ? 'Вы выиграли!' : 'Вас выгнали!'}
             </h1>
             <p style={{
               fontSize: '32px',
               color: 'white'
             }}>
-              {playerWon
+              {!removedPlayers.includes(playerName) 
                 ? 'Вы будете спасать человечество!!!' 
                 : 'Кажется, ваша жизнь закончится в ближайшее время вне бункера...'
               }
@@ -864,7 +947,7 @@ function Game() {
                         </span>
                         {isMaster && !gameOver && (
                           <button
-                            onClick={() => playerWon()}
+                            onClick={() => removePlayer(player)}
                             style={{
                               background: '#ff5555',
                               color: 'white',
