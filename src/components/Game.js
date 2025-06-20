@@ -110,12 +110,16 @@ function Game() {
   const checkGameOver = async (currentRemovedPlayers) => {
   const totalPlayers = fixedPlayers.current.length;
   const remainingPlayers = totalPlayers - currentRemovedPlayers.length;
+  console.log(totalPlayers, "изначально")
+  console.log(remainingPlayers, "изначально")
   
   if (remainingPlayers <= totalPlayers / 2) {
     setGameOver(true);
     const won = !currentRemovedPlayers.includes(playerName);
     setPlayerWon(won);
     setShowResult(true);
+    console.log(totalPlayers, "в функции")
+  console.log(remainingPlayers, "в функции")
     
     try {
       const roomRef = doc(db, "rooms", gameCode);
@@ -147,9 +151,9 @@ function Game() {
       console.error("Ошибка при завершении игры:", error);
     }
     
-    return true;
+    return false;
   }
-  return false;
+  return true;
 };
 
   // Обработчик событий хранилища
@@ -264,6 +268,68 @@ function Game() {
   }
 };
 
+ const revealExit = async (player) => {
+  if (window.confirm('Вы уверены, что хотите выйти из игры?')) {
+    try {
+      const roomRef = doc(db, "rooms", gameCode);
+      
+      // Получаем текущее состояние комнаты
+      const roomSnap = await getDoc(roomRef);
+      if (!roomSnap.exists()) {
+        alert("Комната не найдена!");
+        return;
+      }
+      navigate('/');
+      const roomData = roomSnap.data();
+      const currentRemovedPlayers = roomData.removedPlayers || [];
+      
+      // Если игрок уже удален - ничего не делаем
+      if (currentRemovedPlayers.includes(player)) {
+        return;
+      }
+      
+      // Добавляем игрока в список удаленных
+      const updatedRemovedPlayers = [...currentRemovedPlayers, player];
+      
+      // Обновляем документ в Firestore
+      await updateDoc(roomRef, {
+        removedPlayers: updatedRemovedPlayers,
+        // Раскрываем все характеристики для вышедшего игрока
+        [`revealedTraits.${player}`]: fixedPlayerTraits.current[player]
+      });
+      
+      // Обновляем локальное состояние
+      setRemovedPlayers(updatedRemovedPlayers);
+      setRevealedTraits(prev => ({
+        ...prev,
+        [player]: fixedPlayerTraits.current[player]
+      }));
+      
+      // Проверяем, завершена ли игра
+      const isGameOver = await checkGameOver(updatedRemovedPlayers);
+      
+      if (isGameOver) {
+        const isWinner = !updatedRemovedPlayers.includes(playerName);
+        setPlayerWon(isWinner);
+        setShowResult(true);
+        
+        if (!isWinner) {
+          setTimeout(() => setShowResult(false), 10000);
+        }
+      } else if (player === playerName) {
+        // Если вышел текущий игрок - показываем сообщение о проигрыше
+        setPlayerWon(false);
+        setShowResult(true);
+        setTimeout(() => setShowResult(false), 10000);
+      }
+      
+    } catch (error) {
+      console.error("Ошибка при выходе из игры:", error);
+      alert(`Ошибка: ${error.message}`);
+    }
+  }
+};
+
   // Удаление игрока
 const removePlayer = async (playerToRemove) => {
   if (!window.confirm(`Вы точно хотите удалить ${playerToRemove} из игры?`)) {
@@ -311,9 +377,9 @@ const removePlayer = async (playerToRemove) => {
     setRevealedTraits(updatedRevealedTraits);
 
     // Проверяем, завершена ли игра
-    const isGameOver = checkGameOver(updatedRemovedPlayers, roomData.players);
+    //const isGameOver = checkGameOver(updatedRemovedPlayers);
     
-    if (isGameOver) {
+    if (gameOver) {
       // Определяем, является ли текущий игрок победителем
       const isWinner = !updatedRemovedPlayers.includes(playerName);
       setPlayerWon(isWinner);
@@ -327,7 +393,8 @@ const removePlayer = async (playerToRemove) => {
       // Если игра продолжается, показываем проигрыш только удаленному игроку
       if (playerToRemove === playerName) {
         setPlayerWon(false);
-        setShowResult(true);
+        setShowResult(false);
+        console.log(showResult)
         setTimeout(() => setShowResult(false), 10000);
       }
     }
@@ -421,7 +488,7 @@ const stopTimer = async () => {
         }}></div>
 
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => revealExit(playerName)}
           style={{
             position: 'absolute',
             top: '20px',
@@ -618,7 +685,7 @@ const stopTimer = async () => {
               color: 'white'
             }}>
               {!removedPlayers.includes(playerName) 
-                ? 'Вы будете спасать человечество!!!' 
+                ? 'Вы будете спасать человечество!!!'
                 : 'Кажется, ваша жизнь закончится в ближайшее время вне бункера...'
               }
             </p>
@@ -638,7 +705,7 @@ const stopTimer = async () => {
       }}></div>
 
       <button 
-        onClick={() => navigate('/')}
+        onClick={() => revealExit(playerName)}
         style={{
           position: 'absolute',
           top: '20px',
